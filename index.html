@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Subnet Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      min-height: 100vh;
+    }
+    .card {
+      border-radius: 1rem;
+      box-shadow: 0 0 30px rgba(0,0,0,0.4);
+    }
+    .result-box {
+      background: #111827;
+      border-radius: .5rem;
+      padding: .75rem;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+
+      <div class="card bg-dark text-light">
+        <div class="card-body">
+          <h2 class="text-center mb-4">🌐 Subnet Calculator</h2>
+
+          <!-- Input -->
+          <div class="mb-3">
+            <label class="form-label">IP Adresi</label>
+            <input type="text" id="ip" class="form-control" placeholder="192.168.1.10">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">CIDR</label>
+            <input type="number" id="cidr" class="form-control" placeholder="24" min="0" max="32">
+          </div>
+
+          <div class="d-grid mb-4">
+            <button class="btn btn-primary btn-lg" onclick="calculate()">Hesapla</button>
+          </div>
+
+          <!-- Results -->
+          <div id="results" class="d-none">
+            <h5 class="mb-3">📊 Sonuçlar</h5>
+
+            <div class="mb-2">
+              <strong>Subnet Mask</strong>
+              <div class="result-box" id="mask"></div>
+            </div>
+
+            <div class="mb-2">
+              <strong>Network Address</strong>
+              <div class="result-box" id="network"></div>
+            </div>
+
+            <div class="mb-2">
+              <strong>Broadcast Address</strong>
+              <div class="result-box" id="broadcast"></div>
+            </div>
+
+            <div class="mb-2">
+              <strong>İlk Host</strong>
+              <div class="result-box" id="firstHost"></div>
+            </div>
+
+            <div class="mb-2">
+              <strong>Son Host</strong>
+              <div class="result-box" id="lastHost"></div>
+            </div>
+
+            <div class="mb-2">
+              <strong>Toplam IP Sayısı</strong>
+              <div class="result-box" id="total"></div>
+            </div>
+
+            <div class="mb-2">
+              <strong>Kullanılabilir Host</strong>
+              <div class="result-box" id="usable"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <p class="text-center text-muted mt-4">
+        Offline çalışır • GitHub Pages uyumlu
+      </p>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function ipToInt(ip) {
+  return ip.split('.').reduce((acc, oct) => (acc << 8) + parseInt(oct), 0) >>> 0;
+}
+
+function intToIp(int) {
+  return [
+    (int >>> 24) & 255,
+    (int >>> 16) & 255,
+    (int >>> 8) & 255,
+    int & 255
+  ].join('.');
+}
+
+function calculate() {
+  const ip = document.getElementById('ip').value;
+  const cidr = parseInt(document.getElementById('cidr').value);
+
+  if (!ip || isNaN(cidr)) {
+    alert("IP ve CIDR giriniz");
+    return;
+  }
+
+  const ipInt = ipToInt(ip);
+  const maskInt = cidr === 0 ? 0 : (0xFFFFFFFF << (32 - cidr)) >>> 0;
+
+  const network = ipInt & maskInt;
+  const broadcast = network | (~maskInt >>> 0);
+
+  const totalIPs = Math.pow(2, 32 - cidr);
+  const usable = cidr >= 31 ? 0 : totalIPs - 2;
+
+  document.getElementById('mask').textContent = intToIp(maskInt);
+  document.getElementById('network').textContent = intToIp(network);
+  document.getElementById('broadcast').textContent = intToIp(broadcast);
+  document.getElementById('firstHost').textContent = usable ? intToIp(network + 1) : "-";
+  document.getElementById('lastHost').textContent = usable ? intToIp(broadcast - 1) : "-";
+  document.getElementById('total').textContent = totalIPs;
+  document.getElementById('usable').textContent = usable;
+
+  document.getElementById('results').classList.remove('d-none');
+}
+</script>
+
+</body>
+</html>
